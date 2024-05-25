@@ -1,0 +1,73 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+model User {
+  id             String   @id @default(auto()) @map("_id") @db.ObjectId
+  username       String   @unique
+  password       String
+  role           Role     @default(USER)
+  cart           Cart?
+  profile        Profile?
+  orders_history Order[]
+}
+
+model Profile {
+  id     String @id @default(auto()) @map("_id") @db.ObjectId
+  name   String
+  bio    String
+  user   User   @relation(fields: [userID], references: [id])
+  userID String @unique @db.ObjectId
+}
+
+model Category {
+  id       String    @id @default(auto()) @map("_id") @db.ObjectId
+  name     String
+  slug     String
+  products Product[]
+}
+
+model Product {
+  id             String   @id @default(auto()) @map("_id") @db.ObjectId
+  name           String
+  slug           String   @unique
+  description    String?
+  price          Int
+  moneyback      Int
+  categotegory   Category @relation(fields: [categotegoryID], references: [id])
+  categotegoryID String   @db.ObjectId
+  carts          Cart[]   @relation(fields: [cartIDs], references: [id]) @ignore
+  cartIDs        String[] @ignore @db.ObjectId
+}
+
+model Cart {
+  id         String    @id @default(auto()) @map("_id") @db.ObjectId
+  products   Product[] @relation(fields: [productIDs], references: [id])
+  productIDs String[]  @db.ObjectId
+  user       User      @relation(fields: [userID], references: [id])
+  userID     String    @unique @db.ObjectId
+}
+
+model Order {
+  id                     String @id @default(auto()) @map("_id") @db.ObjectId
+  total_price            Int
+  total_moneyback_points Int
+  user                   User   @relation(fields: [userID], references: [id])
+  userID                 String @unique @db.ObjectId
+}
